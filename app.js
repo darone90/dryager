@@ -1,7 +1,7 @@
 const WebSocketServer = require('websocket').server
 const http = require('http');
 const {
-    spawn
+    spawn, fork
 } = require('child_process');
 
 const {
@@ -43,13 +43,20 @@ const process = spawn('python3', ['../python/Main.py',
     initialParams.loopTime,
     initialParams.dry
 ]);
+setInterval(() => {
+    const spawned = spawn('python', ['../python/Test.py'])
+    spawned.stdout.on('data', (data) => {
+        console.log(data.toString('utf-8'))
+    })
+}, 2000)
 
-console.log('spawn process finished succesfully');
 
 setTimeout(() => {
     process.kill()
     console.log('process dead')
 }, 20000)
+
+
 
 
 wsServer.on('request', function (request) {
