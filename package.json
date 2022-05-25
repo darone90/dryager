@@ -1,0 +1,14 @@
+{
+  "name": "dryager",
+  "version": "0.1.0",
+  "description": "websocket server for dryager project",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "D Pilecki",
+  "license": "ISC",
+  "dependencies": {
+    "websocket": "^1.0.34"
+  }
+}
