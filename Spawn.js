@@ -4,6 +4,8 @@ const {
 const {
     defaultParams
 } = require('./app.config');
+const fs = require('fs');
+
 
 class Spawn {
     constructor(data) {
@@ -24,17 +26,22 @@ class Spawn {
             this.initialParams.loopTime,
             this.initialParams.dry
         ])
+        this.status = 'alive';
     }
-    //add actualization on database
 
     getData() {
-        const data = null // connection to database......
+        const coded = fs.readFileSync('./params.json');
+        const data = JSON.parse(coded);
         return data ? data : defaultParams
+    }
+
+    getStatus() {
+        return this.status
     }
 
     killProcess() {
         this.process.kill();
-        console.log('process Killed!')
+        this.status = 'killed'
     }
 }
 

@@ -1,0 +1,12 @@
+{
+    "tempSetPoint": 25,
+    "tempHist": 3,
+    "ventInterval": 10,
+    "ventTime": 5,
+    "humiSetPoint": 55,
+    "humiTolleracne": 10,
+    "humiActiveTime": 5,
+    "humiInterval": 20,
+    "loopTime": 2,
+    "dry": 20
+}
