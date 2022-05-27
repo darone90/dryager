@@ -25,7 +25,7 @@ class Spawn {
             this.initialParams.humiInterval,
             this.initialParams.loopTime,
             this.initialParams.dry
-        ])
+        ]);
         this.status = 'alive';
     }
 
@@ -48,3 +48,4 @@ class Spawn {
 module.exports = {
     Spawn
 }
+

@@ -28,7 +28,9 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(express.json());
-app.use(urlencoded());
+app.use(urlencoded({
+    extended: true
+}));
 app.use(cors({
     origin: 'http://localhost:3000'
 }));
@@ -52,23 +54,89 @@ app
         res.json(response)
     })
 
-    .get('/loop', async (req, res) => {
+    .get('/humidity', async (req, res) => {
+        const coded = await fs.readFile('./params.json');
+        const data = JSON.parse(coded);
+        const response = {
+            humiSetPoint: data.humiSetPoint,
+            humiTolleracne: data.humiTolleracne,
+            humiActiveTime: data.humiActiveTime,
+            humiInterval: data.humiInterval
+        }
+        res.json(response)
+    })
 
+    .get('/loop', async (req, res) => {
+                    const data = process.getStatus();
+                    const status = data === 'alive' ? true : false;
+                    const coded = await fs.readFile('./params.json');
+                    const decoded = JSON.parse(coded);
+                    const response = {
+                        status,
+                        loop: decoded.loopTime
+                    }
+                    res.json(response)
     })
 
     .get('/process/:action', async (req, res) => {
-        const action = req.params;
+        const {
+            action
+        } = req.params;
+        switch (action) {
+            case 'start':
+                process = new Spawn();
+                break;
+            case 'stop':
+                process.killProcess();
+                break;
+            case 'restart':
+                process.killProcess();
+                process = new Spawn();
+                break;
+        }
+        res.json({
+            ok: true
+        });
     })
 
-    .get('/devices/:device/:action', async (req, res) => {
-
+    .get('/devices/:device/:action', (req, res) => {
+                const device = req.params.device;
+                if (device === 'all') {
+                    spawn('python3', ['../python/devicesHandler.py', device]);
+                    res.json({
+                        ok: true
+                    });
+                } else {
+                    const action = req.params.action;
+                    spawn('python3', ['../python/devicesHandler.py', device, action]);
+                    res.json({
+                        ok: true
+                    });
+                }
     })
 
     .post('/loop', async (req, res) => {
-
+	process.killProcess();
+        const {
+            loop
+        } = req.body;
+        
+        const coded = await fs.readFile('./params.json');
+        const decoded = JSON.parse(coded);
+        const newData = {
+            ...decoded,
+            loopTime: Number(loop)
+        }
+        const toSave = JSON.stringify(newData);
+        await fs.writeFile('./params.json', toSave)
+	process = new Spawn();
+        res.json({
+            ok: true
+        });
     })
 
     .post('/temperature', async (req, res) => {
+	process.killProcess();
         const data = req.body;
         const coded = await fs.readFile('./params.json');
         const decoded = JSON.parse(coded);
@@ -79,8 +147,30 @@ app
         }
         const toSave = JSON.stringify(newData);
         await fs.writeFile('./params.json', toSave)
-        process.killProcess();
         process = new Spawn();
+        res.json({
+        ok: true
+        });
+        })
+
+        .post('/humidity', async (req, res) => {
+                        process.killProcess();
+                        const data = req.body;
+                        const coded = await fs.readFile('./params.json');
+                        const decoded = JSON.parse(coded);
+                        const newData = {
+                            ...decoded,
+                            humiSetPoint: data.humiSetPoint,
+                            humiTolleracne: data.humiTolleracne,
+                            humiActiveTime: data.humiActiveTime,
+                            humiInterval: data.humiInterval
+                        }
+                        const toSave = JSON.stringify(newData);
+                        await fs.writeFile('./params.json', toSave);
+			process = new Spawn();
+                        res.json({
+                            ok: true
+                        });
     })
 
 
@@ -92,7 +182,7 @@ wsServer.on('request', function (request) {
         const spawned = spawn('python', ['../python/Test.py'])
         spawned.stdout.on('data', async (data) => {
                         message = data.toString('utf-8');
-                        const status = await fs.readFile('./python/devices.json');
+                        const status = await fs.readFile('../python/devices.json');
                         const decoded = JSON.parse(status);
                         const response = {
                             ...decoded,
