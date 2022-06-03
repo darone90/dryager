@@ -10,19 +10,15 @@ const {
     Spawn
     } = require('./Spawn');
 const {
-    port
+    port, key
 } = require('./app.config');
-const {
-    response
-} = require('express');
 const {
     urlencoded
 } = require('express');
-const {
-    get
-} = require('express/lib/response');
 
 let process = new Spawn();
+let camera;
+let cameraStatus = false;
 
 const app = express();
 const server = http.createServer(app);
@@ -43,6 +39,21 @@ const wsServer = new WebSocketServer({
 });
 
 app
+    .get('/camera/:action', (req, res) => {
+        const action = req.params.action
+
+        if (action === 'start') {
+            camera = spawn('node', ['./node_modules/raspberrypi-node-camera-web-streamer/index.js']);
+            cameraStatus = true;
+            res.end()
+        } else {
+            camera.kill()
+            cameraStatus = false;
+            res.end()
+        }
+
+    })
+
     .get('/temperature', async (req, res) => {
         const coded = await fs.readFile('./params.json');
         const data = JSON.parse(coded);
@@ -172,10 +183,8 @@ app
                             ok: true
                         });
     })
-
-
 wsServer.on('request', function (request) {
-    const connection = request.accept('dryager-protocol', request.origin);
+    const connection = request.accept(`dryager-protocol-${key}`, request.origin);
 
     const dataLoop = setInterval(() => {
                 let message;
@@ -193,7 +202,9 @@ wsServer.on('request', function (request) {
         })
     }, 2000);
     connection.on('close', function (reasonCode, description) {
-        console.log('connection closed')
+        if (cameraStatus) {
+            camera.kill();
+        }
         clearInterval(dataLoop)
     })
 });
