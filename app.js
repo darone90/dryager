@@ -54,6 +54,19 @@ app
 
     })
 
+    .get('/air', async (req, res) => {
+        const coded = await fs.readFile('./params.json');
+        const data = JSON.parse(coded);
+
+        const response = {
+            ventInterval: data.ventInterval,
+            ventTime: data.ventTime,
+            dry: data.dry
+        }
+
+        res.json(response)
+    })
+
     .get('/temperature', async (req, res) => {
         const coded = await fs.readFile('./params.json');
         const data = JSON.parse(coded);
@@ -183,6 +196,25 @@ app
                             ok: true
                         });
     })
+    .post('/air', async (req, res) => {
+        process.killProcess();
+        const data = req.body;
+        const coded = await fs.readFile('./params.json');
+        const decoded = JSON.parse(coded);
+        const newData = {
+            ...decoded,
+            ventInterval: data.ventInterval,
+            ventTime: data.ventTime,
+            dry: data.dry
+        }
+        const toSave = JSON.stringify(newData);
+        await fs.writeFile('./params.json', toSave);
+        process = new Spawn();
+        res.json({
+            ok: true
+        });
+    })
+
 wsServer.on('request', function (request) {
     const connection = request.accept(`dryager-protocol-${key}`, request.origin);
 
