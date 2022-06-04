@@ -4,6 +4,11 @@ const http = require('http');
 const cors = require('cors');
 const fs = require('fs').promises;
 const {
+    setLightOn,
+    setLightOff,
+    setLightColor
+    } = require('./lightHandler');
+    const {
     spawn
 } = require('child_process');
     const {
@@ -39,16 +44,28 @@ const wsServer = new WebSocketServer({
 });
 
 app
+    .get('/light/:red/:green/:blue', (req, res) => {
+        const {
+            red,
+            green,
+            blue
+        } = req.params;
+        setLightColor(red, green, blue)
+        res.end();
+    })
+
     .get('/camera/:action', (req, res) => {
         const action = req.params.action
 
         if (action === 'start') {
             camera = spawn('node', ['./node_modules/raspberrypi-node-camera-web-streamer/index.js']);
+            setLightOn();
             cameraStatus = true;
             res.end()
         } else {
             camera.kill()
             cameraStatus = false;
+            setLightOff()
             res.end()
         }
 
@@ -236,6 +253,7 @@ wsServer.on('request', function (request) {
     connection.on('close', function (reasonCode, description) {
         if (cameraStatus) {
             camera.kill();
+            setLightOff()
         }
         clearInterval(dataLoop)
     })
