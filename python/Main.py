@@ -15,7 +15,8 @@ waterModule = 15
 temperatureSET = int(sys.argv[1])
 temperatureHIS = int(sys.argv[2])
 
-ventInterval = int(sys.argv[3])
+ventIntervalINT = int(sys.argv[3])
+ventInterval = ventIntervalINT
 ventTimeINIT = int(sys.argv[4])
 ventTime = ventTimeINIT
 
@@ -69,7 +70,6 @@ while True:
     if loopClock >= ventTime and ventON:
         GPIOhandle(ventModule, OFF)
         ActualizeModuleInfo('ventModule','off')
-        ActualizeModuleInfo('drying','off')
         loopClock = 0
         ventTime = ventTimeINIT
         ventON = False
@@ -88,10 +88,13 @@ while True:
 
     if humi < humiditySET:
         ventTime = ventTimeINIT
+        ventInterval = ventIntervalINT
         ActualizeModuleInfo('drying','off')
 
     if humi > humiditySET + humidityTOL:
         ventTime = dry
+        ventInterval = 30
+	
         ActualizeModuleInfo('drying','on')
         
     if waterON:
